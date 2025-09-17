@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Create Product - E-commerce DDD Demo{% endblock %}
+
+{% block body %}
+<div class="card">
+    <h2>➕ Create New Product</h2>
+    <p>Add a new product to your catalog. Business rules will be enforced automatically.</p>
+
+    {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+
+    <form method="post">
+        <div class="form-group">
+            <label for="name">Product Name *</label>
+            <input type="text" id="name" name="name" class="form-control" required
+                   placeholder="e.g., iPhone 15, Organic Rice, Premium Coffee">
+            <small>Must be unique across all products</small>
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price (UAH) *</label>
+            <input type="number" id="price" name="price" class="form-control"
+                   min="0" step="0.01" required placeholder="0.00">
+            <small>Price must be non-negative</small>
+        </div>
+
+        <div class="form-group">
+            <label for="type">Product Type *</label>
+            <select id="type" name="type" class="form-control" required>
+                <option value="">Select product type...</option>
+                <option value="piece">PIECE - Sold by individual units (integer quantities)</option>
+                <option value="weight">WEIGHT - Sold by weight/volume (decimal quantities)</option>
+            </select>
+            <small>Determines quantity validation rules</small>
+        </div>
+
+        <button type="submit" class="btn btn-success">Create Product</button>
+        <a href="{{ path('products_list') }}" class="btn">Cancel</a>
+    </form>
+</div>
+
+<div class="card">
+    <h3>📋 Business Rule Examples</h3>
+    <div class="row">
+        <div class="col">
+            <h4>✅ Valid Examples</h4>
+            <ul>
+                <li><strong>PIECE:</strong> "iPhone 15" - 999.99 UAH</li>
+                <li><strong>WEIGHT:</strong> "Organic Rice" - 2.50 UAH/kg</li>
+                <li><strong>PIECE:</strong> "Programming Book" - 45.00 UAH</li>
+                <li><strong>WEIGHT:</strong> "Premium Coffee" - 15.75 UAH/100g</li>
+            </ul>
+        </div>
+        <div class="col">
+            <h4>❌ Invalid Examples</h4>
+            <ul>
+                <li>Empty product name</li>
+                <li>Duplicate product name</li>
+                <li>Negative price</li>
+                <li>Product name > 255 characters</li>
+            </ul>
+        </div>
+    </div>
+
+    <h4>🔄 Try These Tests</h4>
+    <ol>
+        <li>Create a product with a valid name and price</li>
+        <li>Try creating another product with the same name (should fail)</li>
+        <li>Try creating a product with a negative price (should fail)</li>
+        <li>Try creating a product with an empty name (should fail)</li>
+    </ol>
+</div>
+{% endblock %}

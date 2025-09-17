@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home - E-commerce DDD Demo{% endblock %}
+
+{% block body %}
+<div class="card">
+    <h2>🎯 Domain-Driven Design E-commerce Demo</h2>
+    <p>This application demonstrates a complete DDD implementation with rich domain entities, business rule enforcement, and clean architecture.</p>
+
+    <div class="row">
+        <div class="col">
+            <h3>🏗️ Architecture Highlights</h3>
+            <ul>
+                <li>Rich Domain Entities with encapsulated business logic</li>
+                <li>Value Objects for type safety and validation</li>
+                <li>Aggregate boundaries with transactional consistency</li>
+                <li>Domain exceptions for business rule violations</li>
+                <li>Clean separation of concerns</li>
+            </ul>
+        </div>
+        <div class="col">
+            <h3>🚀 Quick Start</h3>
+            {% if products is empty %}
+                <p><a href="{{ path('demo_setup') }}" class="btn btn-success">🎯 Setup Demo Data</a></p>
+                <small>Or manually:</small>
+            {% endif %}
+            <ol>
+                <li><a href="{{ path('products_create') }}">Create some products</a> (piece or weight types)</li>
+                <li><a href="{{ path('orders_create') }}">Create a new order</a></li>
+                <li>Add products to your order</li>
+                <li>Issue an invoice</li>
+                <li>Pay the invoice</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <h3>📦 Products ({{ products|length }})</h3>
+            {% if products is empty %}
+                <p>No products available. <a href="{{ path('products_create') }}">Create your first product</a>!</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.price }}</td>
+                            <td>
+                                <span class="badge {% if product.type.value == 'piece' %}badge-new{% else %}badge-invoiced{% endif %}">
+                                    {{ product.type.value|upper }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <a href="{{ path('products_list') }}" class="btn btn-sm">View All Products</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card">
+            <h3>🛒 Recent Orders ({{ orders|length }})</h3>
+            {% if orders is empty %}
+                <p>No orders yet. <a href="{{ path('orders_create') }}">Create your first order</a>!</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orderId, order in orders %}
+                        <tr>
+                            <td>{{ orderId }}</td>
+                            <td>
+                                <span class="badge badge-{{ order.status.value }}">
+                                    {{ order.status.value|upper }}
+                                </span>
+                            </td>
+                            <td>{{ order.calculateTotalAmount }}</td>
+                            <td>{{ order.items|length }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <a href="{{ path('orders_list') }}" class="btn btn-sm">View All Orders</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🧪 Test the Business Rules</h3>
+    <p>This demo enforces all the business rules from the DDD specification:</p>
+
+    <div class="row">
+        <div class="col">
+            <h4>Product Rules</h4>
+            <ul>
+                <li>✅ Unique product names system-wide</li>
+                <li>✅ PIECE products: integer quantities only</li>
+                <li>✅ WEIGHT products: decimal quantities allowed</li>
+                <li>✅ Non-negative pricing</li>
+            </ul>
+        </div>
+        <div class="col">
+            <h4>Order Rules</h4>
+            <ul>
+                <li>✅ Can only edit orders with NEW status</li>
+                <li>✅ Order total = sum of all items</li>
+                <li>✅ Status progression: NEW → INVOICED → PAID</li>
+                <li>✅ New invoice cancels previous invoices</li>
+            </ul>
+        </div>
+        <div class="col">
+            <h4>Invoice Rules</h4>
+            <ul>
+                <li>✅ Only NEW invoices can be paid</li>
+                <li>✅ Exact payment amount validation</li>
+                <li>✅ Cannot pay the same invoice twice</li>
+                <li>✅ Payment updates order status to PAID</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Order #{{ orderId }} - E-commerce DDD Demo{% endblock %}
+
+{% block body %}
+<div class="card">
+    <div class="row">
+        <div class="col">
+            <h2>🛒 Order #{{ orderId }}</h2>
+            <p>
+                Status: <span class="badge badge-{{ order.status.value }}">{{ order.status.value|upper }}</span>
+                | Total: <strong>{{ order.calculateTotalAmount }}</strong>
+            </p>
+        </div>
+        <div class="col text-right">
+            <a href="{{ path('orders_list') }}" class="btn">← Back to Orders</a>
+        </div>
+    </div>
+
+    {% if order.items is empty %}
+        <div class="alert alert-error">
+            <strong>Empty Order!</strong> Add some products to get started.
+        </div>
+    {% else %}
+        <h3>📦 Order Items</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items %}
+                <tr>
+                    <td><strong>{{ item.product.name }}</strong></td>
+                    <td>
+                        <span class="badge {% if item.product.type.value == 'piece' %}badge-new{% else %}badge-invoiced{% endif %}">
+                            {{ item.product.type.value|upper }}
+                        </span>
+                    </td>
+                    <td>{{ item.product.price }}</td>
+                    <td>
+                        {{ item.quantity }}
+                        {% if item.product.type.value == 'piece' %}
+                            <small>(integer)</small>
+                        {% else %}
+                            <small>(decimal)</small>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ item.totalPrice }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="border-top: 2px solid #e2e8f0;">
+                    <td colspan="4"><strong>Order Total:</strong></td>
+                    <td><strong>{{ order.calculateTotalAmount }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    {% endif %}
+</div>
+
+{% if order.status.value == 'new' %}
+<div class="card">
+    <h3>➕ Add Product to Order</h3>
+    <p>Select a product and quantity to add to this order.</p>
+
+    {% if products is empty %}
+        <div class="alert alert-error">
+            No products available! <a href="{{ path('products_create') }}">Create some products first</a>.
+        </div>
+    {% else %}
+        <form method="post" action="{{ path('orders_add_product', {id: orderId}) }}">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="product_name">Product</label>
+                        <select id="product_name" name="product_name" class="form-control" required onchange="updateQuantityHint()">
+                            <option value="">Select a product...</option>
+                            {% for product in products %}
+                            <option value="{{ product.name }}" data-type="{{ product.type.value }}" data-price="{{ product.price.amountFloat }}">
+                                {{ product.name }} - {{ product.price }} ({{ product.type.value|upper }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="number" id="quantity" name="quantity" class="form-control"
+                               min="0.01" step="0.01" required placeholder="1">
+                        <small id="quantity-hint">Enter the quantity</small>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-success">Add to Order</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <script>
+            function updateQuantityHint() {
+                const select = document.getElementById('product_name');
+                const hint = document.getElementById('quantity-hint');
+                const quantityInput = document.getElementById('quantity');
+
+                if (select.value) {
+                    const option = select.options[select.selectedIndex];
+                    const type = option.getAttribute('data-type');
+                    const price = option.getAttribute('data-price');
+
+                    if (type === 'piece') {
+                        hint.textContent = 'Integer quantities only (1, 2, 3...)';
+                        quantityInput.step = '1';
+                        quantityInput.min = '1';
+                    } else {
+                        hint.textContent = 'Decimal quantities allowed (1.5, 2.75...)';
+                        quantityInput.step = '0.01';
+                        quantityInput.min = '0.01';
+                    }
+
+                    hint.textContent += ` | Price: ${price} UAH per unit`;
+                } else {
+                    hint.textContent = 'Enter the quantity';
+                    quantityInput.step = '0.01';
+                    quantityInput.min = '0.01';
+                }
+            }
+        </script>
+    {% endif %}
+</div>
+{% else %}
+<div class="card">
+    <div class="alert alert-error">
+        <strong>Order Locked!</strong> Cannot add products to orders with status "{{ order.status.value|upper }}".
+        Only NEW orders can be modified.
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>🧾 Invoice Management</h3>
+
+    {% if order.invoices is empty %}
+        <p>No invoices created yet.</p>
+        {% if not order.isEmpty %}
+            <form method="post" action="{{ path('orders_create_invoice', {id: orderId}) }}" style="display: inline;">
+                <button type="submit" class="btn btn-warning">📄 Create Invoice</button>
+            </form>
+        {% else %}
+            <p><em>Add products to the order before creating an invoice.</em></p>
+        {% endif %}
+    {% else %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for index, invoice in order.invoices %}
+                <tr>
+                    <td>Invoice #{{ index + 1 }}</td>
+                    <td>
+                        {% if invoice.isNew %}
+                            <span class="badge badge-new">NEW</span>
+                        {% elseif invoice.isPaid %}
+                            <span class="badge badge-paid">PAID</span>
+                        {% else %}
+                            <span class="badge badge-cancelled">CANCELLED</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ invoice.amount }}</td>
+                    <td>
+                        {% if invoice.isNew %}
+                            <form method="post" action="{{ path('orders_pay_invoice', {id: orderId}) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-success btn-sm">💳 Pay Invoice</button>
+                            </form>
+                        {% elseif invoice.isPaid %}
+                            <span class="badge badge-paid">✅ PAID</span>
+                        {% else %}
+                            <span class="badge badge-cancelled">❌ CANCELLED</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if order.status.value != 'paid' %}
+            <form method="post" action="{{ path('orders_create_invoice', {id: orderId}) }}" style="display: inline;">
+                <button type="submit" class="btn btn-warning">📄 Create New Invoice</button>
+            </form>
+            <small>Creating a new invoice will cancel all previous NEW invoices.</small>
+        {% endif %}
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>🔍 Business Rules in Action</h3>
+    <div class="row">
+        <div class="col">
+            <h4>Product Addition Rules</h4>
+            <ul>
+                <li>✅ PIECE products validate integer quantities</li>
+                <li>✅ WEIGHT products allow decimal quantities</li>
+                <li>❌ Cannot add products after invoice creation</li>
+            </ul>
+        </div>
+        <div class="col">
+            <h4>Invoice Rules</h4>
+            <ul>
+                <li>✅ Creating new invoice cancels previous NEW invoices</li>
+                <li>✅ Only NEW invoices can be paid</li>
+                <li>✅ Payment validates exact amount</li>
+                <li>❌ Cannot pay the same invoice twice</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

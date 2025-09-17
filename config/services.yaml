@@ -1,0 +1,47 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
+
+    # Repository services with session dependencies
+    App\Infrastructure\Repository\InMemoryProductRepository:
+        arguments:
+            $requestStack: '@request_stack'
+
+    App\Infrastructure\Repository\InMemoryOrderRepository:
+        arguments:
+            $requestStack: '@request_stack'
+
+    # Repository interfaces bind to implementations
+    App\Domain\Product\ProductRepositoryInterface: '@App\Infrastructure\Repository\InMemoryProductRepository'
+    App\Domain\Order\OrderRepositoryInterface: '@App\Infrastructure\Repository\InMemoryOrderRepository'
+
+    # Application services with explicit dependencies
+    App\Application\Service\ProductService:
+        arguments:
+            $productRepository: '@App\Domain\Product\ProductRepositoryInterface'
+
+    App\Application\Service\OrderService:
+        arguments:
+            $orderRepository: '@App\Domain\Order\OrderRepositoryInterface'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones

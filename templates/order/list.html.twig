@@ -1,0 +1,114 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Orders - E-commerce DDD Demo{% endblock %}
+
+{% block body %}
+<div class="card">
+    <div class="row">
+        <div class="col">
+            <h2>🛒 Order Management</h2>
+            <p>Track orders through their lifecycle: NEW → INVOICED → PAID</p>
+        </div>
+        <div class="col text-right">
+            <a href="{{ path('orders_create') }}" class="btn btn-success">🆕 Create New Order</a>
+        </div>
+    </div>
+
+    {% if orders is empty %}
+        <div class="mt-3">
+            <p>No orders yet.</p>
+            <a href="{{ path('orders_create') }}" class="btn">Create Your First Order</a>
+        </div>
+    {% else %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Status</th>
+                    <th>Items</th>
+                    <th>Total Amount</th>
+                    <th>Invoices</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orderId, order in orders %}
+                <tr>
+                    <td><strong>#{{ orderId }}</strong></td>
+                    <td>
+                        <span class="badge badge-{{ order.status.value }}">
+                            {{ order.status.value|upper }}
+                        </span>
+                    </td>
+                    <td>{{ order.items|length }} items</td>
+                    <td>{{ order.calculateTotalAmount }}</td>
+                    <td>
+                        {% set activeInvoices = 0 %}
+                        {% set paidInvoices = 0 %}
+                        {% set cancelledInvoices = 0 %}
+                        {% for invoice in order.invoices %}
+                            {% if invoice.isNew %}
+                                {% set activeInvoices = activeInvoices + 1 %}
+                            {% elseif invoice.isPaid %}
+                                {% set paidInvoices = paidInvoices + 1 %}
+                            {% else %}
+                                {% set cancelledInvoices = cancelledInvoices + 1 %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if activeInvoices > 0 %}
+                            <span class="badge badge-new">{{ activeInvoices }} NEW</span>
+                        {% endif %}
+                        {% if paidInvoices > 0 %}
+                            <span class="badge badge-paid">{{ paidInvoices }} PAID</span>
+                        {% endif %}
+                        {% if cancelledInvoices > 0 %}
+                            <span class="badge badge-cancelled">{{ cancelledInvoices }} CANCELLED</span>
+                        {% endif %}
+                        {% if order.invoices is empty %}
+                            <small>No invoices</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ path('orders_view', {id: orderId}) }}" class="btn btn-sm">View Details</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-3">
+            <p><strong>{{ orders|length }}</strong> orders total</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>📊 Order Status Explanation</h3>
+    <div class="row">
+        <div class="col">
+            <h4><span class="badge badge-new">NEW</span></h4>
+            <p>Order is being built. You can add/remove products. No invoices created yet.</p>
+        </div>
+        <div class="col">
+            <h4><span class="badge badge-invoiced">INVOICED</span></h4>
+            <p>At least one invoice has been created. Order cannot be modified anymore.</p>
+        </div>
+        <div class="col">
+            <h4><span class="badge badge-paid">PAID</span></h4>
+            <p>An invoice has been successfully paid. Order is complete.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🔄 Test the Order Lifecycle</h3>
+    <ol>
+        <li><strong>Create Order:</strong> Starts in NEW status</li>
+        <li><strong>Add Products:</strong> Only works in NEW status</li>
+        <li><strong>Issue Invoice:</strong> Changes status to INVOICED, prevents further editing</li>
+        <li><strong>Pay Invoice:</strong> Changes status to PAID</li>
+        <li><strong>Try editing paid order:</strong> Should be prevented by business rules</li>
+    </ol>
+</div>
+{% endblock %}

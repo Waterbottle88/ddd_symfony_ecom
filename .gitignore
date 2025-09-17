@@ -1,0 +1,84 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Symfony specific
+/var/
+/public/bundles/
+/public/build/
+/public/assets/
+
+# Environment files
+.env
+.env.local
+.env.local.php
+.env.*.local
+
+# Cache
+/cache/
+/.phpunit.cache/
+
+# Logs
+/var/log/
+*.log
+
+# Tests
+/phpunit.xml
+/coverage/
+/.phpunit.result.cache
+
+# IDE Files
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Build artifacts
+/build/
+/dist/
+
+# Package managers
+composer.phar
+/composer.lock
+yarn.lock
+package-lock.json
+
+# Docker
+.docker/
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Session files
+/var/sessions/
+
+# Application specific
+/uploads/
+/storage/
+
+# Security
+/config/jwt/
+
+# Database
+*.sqlite
+*.db
+*.sql
+
+# Webpack Encore
+/public/build/
+/node_modules/
